@@ -15,7 +15,7 @@ where:
 -delta allows to set a delta time.
 
 Plans are expressed as time-triggered plans, a map from time to action. Each element of the map is a row
-in the file, time is indicating with notation XX and the action as a ground action from the domain. For instance
+in the file, time is indicating in decimal notation, i.e. x.y where x and y are the integer and the decimal part of the time point. The action has to be expressed as a ground action from the domain. For instance
 
 5.4: (move a b)
 
@@ -26,8 +26,6 @@ Note also that we require the end of the plan. This indicates when the agent mee
 5.0: @PlanEND 
 
 indicates that the plan ends at time 5.0.
-
-
 
 # Dependencies
 
