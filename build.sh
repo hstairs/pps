@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Name of the output jar file
-JAR_NAME="output.jar"
+JAR_NAME="pps.jar"
 
 # Paths to the src and lib directories
 SRC_DIR="src"

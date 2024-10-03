@@ -4,12 +4,15 @@
  * and open the template in the editor.
  */
 
+import com.hstairs.ppmajal.PDDLProblem.PDDLState;
 import com.hstairs.ppmajal.domain.PDDLDomain;
 import com.hstairs.ppmajal.PDDLProblem.PDDLProblem;
+import com.hstairs.ppmajal.expressions.NumFluent;
 import com.hstairs.ppmajal.problem.State;
 import com.hstairs.ppmajal.transition.TransitionGround;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.tuple.Pair;
+import org.ojalgo.matrix.transformation.Rotation;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -39,7 +42,7 @@ public class Jpddlsim {
         options.addRequiredOption("sp","solution-plan", true, "PDDL+ Plan file");
         options.addOption("pt","print-trace", false, "Print Trace");
         options.addOption("delta","delta-simulation", true, "Set custom discretisation delta (default = 1.0)");
-        
+
         final CommandLineParser parser = new DefaultParser();
         try {
             final CommandLine cmd = parser.parse(options, args);
@@ -47,20 +50,20 @@ public class Jpddlsim {
             final String p = cmd.getOptionValue("p");
             final String plan = cmd.getOptionValue("sp");
             String delta = cmd.getOptionValue("delta");
-            
             if (delta == null){
                 delta = "1.0";
             }
             boolean pt = cmd.hasOption("pt");
+
             final Pair<PDDLDomain, PDDLProblem> res = parseDomainProblem(d, p, delta, new PrintStream(new OutputStream() {public void write(int b) {}}));
             final PDDLProblem problem = res.getValue();
             final List<Pair<BigDecimal, TransitionGround>> timedPlan = getPlan(problem,plan,new BigDecimal(delta));
             long start = System.currentTimeMillis();
             List<State> trace = problem.getTrace(timedPlan, new BigDecimal(delta), new BigDecimal(delta));
-            int i = 0;
             if (pt) {
                 for (var v: trace){
-                    System.out.println(v+"\n");
+                    PDDLState pddlRepresentation = (PDDLState) v;
+                    System.out.println("Time: "+pddlRepresentation.time+" -> "+v+"\n");
                 }
             }
             System.out.println("Simulation Time:"+(System.currentTimeMillis()-start)/1000.0);
@@ -120,7 +123,7 @@ public class Jpddlsim {
                 if (!time.equals(previous)){
                     BigDecimal divide = time.subtract(previous).divide(delta);
                     for (int i=0 ; i< divide.intValue();i++)
-                        pddlPlan.add(Pair.of(new BigDecimal(previous.intValue()+i),TransitionGround.waitingAction()));
+                        pddlPlan.add(Pair.of(new BigDecimal(previous.intValue()+delta.floatValue()*i),TransitionGround.waitingAction()));
                     previous = time;
                 }
                 pddlPlan.add(Pair.of(time,pddlAction));

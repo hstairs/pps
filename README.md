@@ -14,6 +14,21 @@ where:
 -pt allows to get a timed sequence of states on the standard output
 -delta allows to set a delta time.
 
+Plans are expressed as time-triggered plans, a map from time to action. Each element of the map is a row
+in the file, time is indicating with notation XX and the action as a ground action from the domain. For instance
+
+5.4: (move a b)
+
+indicates that at time 5.4 the agent must move from position a to b.
+
+Note also that we require the end of the plan. This indicates when the agent meets the goal. We encode this with the special action @PlanEND. For instance, 
+
+5.0: @PlanEND 
+
+indicates that the plan ends at time 5.0.
+
+
+
 # Dependencies
 
 The software makes use of a number of libraries, all contained in the lib file. "jpddlplus" in particular contains crucial elements for the simulation task
