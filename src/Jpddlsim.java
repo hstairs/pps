@@ -108,25 +108,27 @@ public class Jpddlsim {
         try {
             final List<String> readAllLines = Files.readAllLines(path,StandardCharsets.UTF_8);
             for (var v: readAllLines){
-                String actionName = v.split(":")[1];
-                actionName = actionName.trim();
-                final BigDecimal time = new BigDecimal(v.split(":")[0]);
-                TransitionGround pddlAction = null;
-                if (!actionName.equals("@PlanEND")) {
-                    pddlAction = problem.getActionsByName(actionName);
-                }else{
-                    pddlAction = TransitionGround.createEmptyAction();
+                if (v.split(":").length > 1) {
+                    String actionName = v.split(":")[1];
+                    actionName = actionName.trim().replace(" ","");
+                    final BigDecimal time = new BigDecimal(v.split(":")[0]);
+                    TransitionGround pddlAction = null;
+                    if (!actionName.equals("@PlanEND")) {
+                        pddlAction = problem.getActionsByName(actionName);
+                    } else {
+                        pddlAction = TransitionGround.createEmptyAction();
+                    }
+                    if (pddlAction == null) {
+                        throw new RuntimeException("Action " + actionName + " is either not present in the domain or not applicable at time " + time);
+                    }
+                    if (!time.equals(previous)) {
+                        BigDecimal divide = time.subtract(previous).divide(delta);
+                        for (int i = 0; i < divide.intValue(); i++)
+                            pddlPlan.add(Pair.of(new BigDecimal(previous.intValue() + delta.floatValue() * i), TransitionGround.waitingAction()));
+                        previous = time;
+                    }
+                    pddlPlan.add(Pair.of(time, pddlAction));
                 }
-                if (pddlAction == null){
-                    throw new RuntimeException("Action "+actionName+" is either not present in the domain or not applicable at time "+time);
-                }
-                if (!time.equals(previous)){
-                    BigDecimal divide = time.subtract(previous).divide(delta);
-                    for (int i=0 ; i< divide.intValue();i++)
-                        pddlPlan.add(Pair.of(new BigDecimal(previous.intValue()+delta.floatValue()*i),TransitionGround.waitingAction()));
-                    previous = time;
-                }
-                pddlPlan.add(Pair.of(time,pddlAction));
             }
         } catch (IOException ex) {
             Logger.getLogger(Jpddlsim.class.getName()).log(Level.SEVERE, null, ex);
