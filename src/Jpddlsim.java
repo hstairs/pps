@@ -8,9 +8,12 @@ import com.hstairs.ppmajal.PDDLProblem.PDDLState;
 import com.hstairs.ppmajal.domain.PDDLDomain;
 import com.hstairs.ppmajal.PDDLProblem.PDDLProblem;
 import com.hstairs.ppmajal.expressions.NumFluent;
+import com.hstairs.ppmajal.pddl.heuristics.advanced.Aibr;
 import com.hstairs.ppmajal.problem.State;
+import com.hstairs.ppmajal.transition.Transition;
 import com.hstairs.ppmajal.transition.TransitionGround;
 import org.apache.commons.cli.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.ojalgo.matrix.transformation.Rotation;
 
@@ -58,8 +61,9 @@ public class Jpddlsim {
             final Pair<PDDLDomain, PDDLProblem> res = parseDomainProblem(d, p, delta, new PrintStream(new OutputStream() {public void write(int b) {}}));
             final PDDLProblem problem = res.getValue();
             final List<Pair<BigDecimal, TransitionGround>> timedPlan = getPlan(problem,plan,new BigDecimal(delta));
+            printPlan(timedPlan);
             long start = System.currentTimeMillis();
-            List<State> trace = problem.getTrace(timedPlan, new BigDecimal(delta), new BigDecimal(delta));
+            List<State> trace = getTrace(problem, timedPlan, new BigDecimal(delta));
             if (pt) {
                 for (var v: trace){
                     PDDLState pddlRepresentation = (PDDLState) v;
@@ -68,14 +72,68 @@ public class Jpddlsim {
             }
             System.out.println("Simulation Time:"+(System.currentTimeMillis()-start)/1000.0);
             System.out.println("\n =============================================== \n");
-            System.out.println("Goal Reached: "+trace.get(trace.size()-1).satisfy(problem.getGoals()));
+            boolean goalReached = trace.get(trace.size() - 1).satisfy(problem.getGoals());
+            if (goalReached) {
+                System.out.println("Goal Reached!");
+            }else{
+                System.out.println("Goal Is Not Reached!");
+                Aibr aibr = new Aibr(problem);
+                System.out.println("Estimated Goal Distance "+aibr.computeEstimate(trace.get(trace.size() - 1)));
+            }
+
         } catch (ParseException ex) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("PPS", options);
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
+    }
 
+    public static List<State> getTrace(PDDLProblem problem, List<org.apache.commons.lang3.tuple.Pair<BigDecimal, TransitionGround>> internalPlanRepresentation, BigDecimal execDelta) throws CloneNotSupportedException {
+        BigDecimal previous = BigDecimal.ZERO;
+        State current = (PDDLState) problem.getInit();
+        List<State> trace = new LinkedList();
+        trace.add(current);
+        //Important: We are assuming that all processes are equivalent to a waiting action lasting the user defined delta time
+        for (org.apache.commons.lang3.tuple.Pair<BigDecimal, TransitionGround> ele : internalPlanRepresentation) {
+            TransitionGround right = (TransitionGround) ele.getRight();
+            if (right.getSemantics().equals(Transition.Semantics.PROCESS)) {
+                final ImmutablePair<State, Integer> stateCollectionPair
+                        = problem.simulation(current, execDelta, execDelta, false, trace);
+                if (stateCollectionPair == null) {
+                    System.out.println("Global constraint violated");
+                    return trace;
+                } else {
+                    current = stateCollectionPair.getLeft();
+                }
+            }
+            previous = ele.getKey();
+            if (ele.getRight() != null && right.getSemantics().equals(Transition.Semantics.ACTION)) {
+                if (right.getName() == null) // This is the end of the plan
+                    return trace;
+                if (!right.isApplicable(current,false,problem)){
+                    System.out.println(ele+" not applicable");
+                    return trace;
+                }
+                current.apply(right, current.clone());
+                trace.add(current);
+            }
+        }
+//        System.out.println(current);
+        return trace;
+    }
+
+    private static void printPlan(List<Pair<BigDecimal, TransitionGround>> timedPlan) {
+        for (var v: timedPlan){
+            TransitionGround right = v.getRight();
+            if (right.getSemantics().equals(Transition.Semantics.ACTION)) {
+                if (right.getName() != null) {
+                    System.out.println(v.getKey() + ":" + v.getRight());
+                }else{
+                    System.out.println("Plan End at: "+v.getLeft());
+                }
+            }
+        }
     }
 
     public static Pair<PDDLDomain, PDDLProblem> parseDomainProblem(String domainFile, String problemFile, String delta, PrintStream out) {
