@@ -5,9 +5,9 @@
  */
 
 import com.hstairs.ppmajal.PDDLProblem.PDDLState;
+import com.hstairs.ppmajal.conditions.*;
 import com.hstairs.ppmajal.domain.PDDLDomain;
 import com.hstairs.ppmajal.PDDLProblem.PDDLProblem;
-import com.hstairs.ppmajal.expressions.NumFluent;
 import com.hstairs.ppmajal.pddl.heuristics.advanced.Aibr;
 import com.hstairs.ppmajal.problem.State;
 import com.hstairs.ppmajal.transition.Transition;
@@ -15,7 +15,6 @@ import com.hstairs.ppmajal.transition.TransitionGround;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.ojalgo.matrix.transformation.Rotation;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -63,23 +62,33 @@ public class Jpddlsim {
             final List<Pair<BigDecimal, TransitionGround>> timedPlan = getPlan(problem,plan,new BigDecimal(delta));
             printPlan(timedPlan);
             long start = System.currentTimeMillis();
-            List<State> trace = getTrace(problem, timedPlan, new BigDecimal(delta));
+            var traceAction = getTrace(problem, timedPlan, new BigDecimal(delta));
+            Pair<BigDecimal, TransitionGround> inapplicableAction = traceAction.getRight();
+
+            List<State> trace = traceAction.getLeft();
             if (pt) {
-                for (var v: trace){
+                for (var v : trace) {
                     PDDLState pddlRepresentation = (PDDLState) v;
-                    System.out.println("Time: "+pddlRepresentation.time+" -> "+v+"\n");
+                    System.out.println("Time: " + pddlRepresentation.time + " -> " + v + "\n");
                 }
             }
-            System.out.println("Simulation Time:"+(System.currentTimeMillis()-start)/1000.0);
+            if (inapplicableAction != null)
+                System.out.println("Plan Invalid. "+inapplicableAction.getRight()+" inapplicable at "+inapplicableAction.getLeft());
+
+            System.out.println("Simulation Time:" + (System.currentTimeMillis() - start) / 1000.0);
             System.out.println("\n =============================================== \n");
-            boolean goalReached = trace.get(trace.size() - 1).satisfy(problem.getGoals());
-            if (goalReached) {
+            State lastState = trace.get(trace.size() - 1);
+            boolean goalReached = lastState.satisfy(problem.getGoals());
+            if (goalReached && inapplicableAction!=null) {
                 System.out.println("Goal Reached!");
-            }else{
+            } else {
                 System.out.println("Goal Is Not Reached!");
                 Aibr aibr = new Aibr(problem);
-                System.out.println("Estimated Goal Distance "+aibr.computeEstimate(trace.get(trace.size() - 1)));
+                System.out.println("Estimated Goal Distance " + aibr.computeEstimate(trace.get(trace.size() - 1)));
+                Condition goals = problem.getGoals();
+                whatIsNotSat(goals,lastState);
             }
+
 
         } catch (ParseException ex) {
             HelpFormatter formatter = new HelpFormatter();
@@ -89,7 +98,23 @@ public class Jpddlsim {
         }
     }
 
-    public static List<State> getTrace(PDDLProblem problem, List<org.apache.commons.lang3.tuple.Pair<BigDecimal, TransitionGround>> internalPlanRepresentation, BigDecimal execDelta) throws CloneNotSupportedException {
+    private static void whatIsNotSat(Condition goals, State lastState) {
+        if (goals instanceof Terminal){
+            if (!goals.isSatisfied(lastState)){
+                System.out.println(goals+" UNSAT");
+            }
+        }else if (goals instanceof AndCond and){
+            for (var v: and.sons){
+                whatIsNotSat((Condition) v,lastState);
+            }
+        }else if (goals instanceof OrCond or){
+            for (var v: or.sons){
+                whatIsNotSat((Condition) v,lastState);
+            }
+        }
+    }
+
+    public static Pair<List<State>, Pair<BigDecimal, TransitionGround>> getTrace(PDDLProblem problem, List<Pair<BigDecimal, TransitionGround>> internalPlanRepresentation, BigDecimal execDelta) throws CloneNotSupportedException {
         BigDecimal previous = BigDecimal.ZERO;
         State current = (PDDLState) problem.getInit();
         List<State> trace = new LinkedList();
@@ -102,7 +127,7 @@ public class Jpddlsim {
                         = problem.simulation(current, execDelta, execDelta, false, trace);
                 if (stateCollectionPair == null) {
                     System.out.println("Global constraint violated");
-                    return trace;
+                    return Pair.of(trace,null);
                 } else {
                     current = stateCollectionPair.getLeft();
                 }
@@ -110,17 +135,17 @@ public class Jpddlsim {
             previous = ele.getKey();
             if (ele.getRight() != null && right.getSemantics().equals(Transition.Semantics.ACTION)) {
                 if (right.getName() == null) // This is the end of the plan
-                    return trace;
+                    return Pair.of(trace,null);
                 if (!right.isApplicable(current,false,problem)){
                     System.out.println(ele+" not applicable");
-                    return trace;
+                    return Pair.of(trace,ele);
                 }
                 current.apply(right, current.clone());
                 trace.add(current);
             }
         }
 //        System.out.println(current);
-        return trace;
+        return Pair.of(trace,null);
     }
 
     private static void printPlan(List<Pair<BigDecimal, TransitionGround>> timedPlan) {
