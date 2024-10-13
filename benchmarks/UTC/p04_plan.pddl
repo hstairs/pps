@@ -1,0 +1,10 @@
+655.0: (changeConfiguration wrac1_stage4 wrac1 conf_wrac1_2 conf_wrac1_6)
+695.0: (changeConfiguration wrbc1_stage5 wrbc1 conf_wrbc1_2 conf_wrbc1_6)
+846.0: (changeConfiguration wrec1_stage4 wrec1 conf_wrec1_2 conf_wrec1_6)
+1121.0: (changeConfiguration wrcc1_stage6 wrcc1 conf_wrcc1_2 conf_wrcc1_4)
+1127.0: (changeConfiguration wrfc1_stage3 wrfc1 conf_wrfc1_2 conf_wrfc1_4)
+1456.0: (changeConfiguration wrdc1_stage4 wrdc1 conf_wrdc1_2 conf_wrdc1_1)
+1493.0: (changeConfiguration wrbc1_stage5 wrbc1 conf_wrbc1_6 conf_wrbc1_2)
+1530.0: (changeConfiguration wrec1_stage4 wrec1 conf_wrec1_6 conf_wrec1_4)
+1543.0: (changeConfiguration wrac1_stage4 wrac1 conf_wrac1_6 conf_wrac1_4)
+1697.0: @PlanEND 
