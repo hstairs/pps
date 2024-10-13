@@ -1,0 +1,8 @@
+0.0: (start_movement_decrease L2 L3 xyaxes)
+10.0: (stop_movement_decrease L2 L3 xyaxes)
+10.0: (start_movement_decrease L2 L3 ZAXES)
+11.0: (stop_movement_decrease L2 L3 ZAXES)
+11.0: (start_movement_decrease L2 L3 xyaxes)
+16.0: (stop_movement_decrease L2 L3 xyaxes)
+16.0: (start_movement_decrease L2 L3 ZAXES)
+18.0: @PlanEND
