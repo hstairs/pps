@@ -79,7 +79,7 @@ public class Jpddlsim {
             System.out.println("\n =============================================== \n");
             State lastState = trace.get(trace.size() - 1);
             boolean goalReached = lastState.satisfy(problem.getGoals());
-            if (goalReached && inapplicableAction!=null) {
+            if (goalReached && inapplicableAction==null) {
                 System.out.println("Goal Reached!");
             } else {
                 System.out.println("Goal Is Not Reached!");
@@ -193,7 +193,7 @@ public class Jpddlsim {
             for (var v: readAllLines){
                 if (v.split(":").length > 1) {
                     String actionName = v.split(":")[1];
-                    actionName = actionName.trim().replace(" ","");
+                    actionName = actionName.trim();
                     final BigDecimal time = new BigDecimal(v.split(":")[0]);
                     TransitionGround pddlAction = null;
                     if (!actionName.equals("@PlanEND")) {
