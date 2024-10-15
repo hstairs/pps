@@ -4,7 +4,7 @@
 246.00000: (T5_beginStop_IE1_S_I)
 290.00000: (T3_beginStop_IW4_S_IV)
 290.00000: (T1_trainEndsVoy_IE5_S_V)
-346.00000: (T5_trainEndsVoy_IE1_S_I )
+346.00000: (T5_trainEndsVoy_IE1_S_I)
 390.00000: (T3_trainEndsVoy_IW4_S_IV)
 566.00000: (T4_entersStation_IE2)
 626.00000: (T4_beginStop_IE2_S_II)
