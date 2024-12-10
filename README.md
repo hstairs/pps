@@ -9,7 +9,7 @@ We require JAVA 17 at least.
 java -jar dist/pps -d <domain.pddl> -p <problem> -sp <plan> {-pt} {-delta <float>}
 where:
 <domain.pddl> is the name of the PDDL+ domain file
-<domain.pddl> is the name of the PDDL+ problem file
+<problem.pddl> is the name of the PDDL+ problem file
 <plan.pddl> is the name of the PDDL+ plan file
 
 -pt allows to get a timed sequence of states on the standard output
