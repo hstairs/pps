@@ -1,6 +1,10 @@
 This folder contains the source code and the executable of the time-discrete pddl+ simulator.
 The simulator allows the user to simulate the execution of a time stamped plan against a discrete PDDL+ model. The discretisation factor is 1 in default, but can be changed with a proper specification through the command line.
 
+# Reference Paper
+
+PPS: An Efficient Java-based Simulator for Time-Discrete PDDL+, E. Scala, F. Percassi, M. Vallati, AAAI 2026 Demo Track (to appear).
+
 # Compilation
 In order to compile the tool just run build.sh. This will create a jar file named ppd.jar that can be executed as explained in the following section
 We require JAVA 17 at least.
